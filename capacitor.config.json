@@ -1,0 +1,19 @@
+{
+  "appId": "com.mynotebook.app",
+  "appName": "دفترچه من",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#08080d"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#08080d",
+      "showSpinner": false
+    }
+  }
+}
