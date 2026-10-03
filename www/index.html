@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark" data-palette="aurora">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>دفترچه من</title>
+  <meta name="description" content="جایی برای جرقه‌های ذهن" />
+  <meta name="theme-color" content="#08080d" />
+
+  <!-- PWA: مانیفست درون‌خطی با data URI -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%DA%86%D9%87%20%D9%85%D9%86%22%2C%22short_name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%DA%86%D9%87%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22display%22%3A%22standalone%22%2C%22dir%22%3A%22rtl%22%2C%22lang%22%3A%22fa%22%2C%22background_color%22%3A%22%2308080d%22%2C%22theme_color%22%3A%22%2308080d%22%7D" />
+
+  <!-- آیکون‌های Material Symbols (تنها وابستگی خارجی) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0" />
+
+  <!-- استایل‌ها -->
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <!-- ═════════ لایه‌های پس‌زمینه ═════════ -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-mesh"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-noise"></div>
+  </div>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+  <canvas id="confettiCanvas" aria-hidden="true"></canvas>
+
+  <!-- ═════════ اسکلت بارگذاری اولیه ═════════ -->
+  <div class="skeleton-screen" id="skeleton" aria-hidden="true">
+    <div class="sk-bar"></div>
+    <div class="sk-grid">
+      <div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div>
+      <div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div>
+    </div>
+  </div>
+
+  <!-- ═════════ صفحه قفل PIN ═════════ -->
+  <div class="lock-screen" id="lockScreen" hidden role="dialog" aria-modal="true" aria-label="قفل دفترچه">
+    <div class="glass lock-box">
+      <span class="material-symbols-rounded lock-icon">lock</span>
+      <h2>دفترچه قفل است</h2>
+      <p class="muted">رمز ۴ رقمی را وارد کن</p>
+      <div class="pin-dots" id="pinDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="pin-pad" id="pinPad">
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <span></span><button type="button" data-k="0">0</button>
+        <button type="button" data-k="back" aria-label="پاک کردن"><span class="material-symbols-rounded">backspace</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ اپلیکیشن اصلی ═════════ -->
+  <div class="app" id="app">
+
+    <!-- ── نوار بالا ── -->
+    <header class="topbar glass" role="banner">
+      <div class="brand">
+        <span class="brand-logo material-symbols-rounded">auto_stories</span>
+        <div class="brand-text">
+          <h1>دفترچه من</h1>
+          <p>جایی برای جرقه‌های ذهن</p>
+        </div>
+      </div>
+
+      <!-- جستجو -->
+      <div class="search" role="search">
+        <span class="material-symbols-rounded">search</span>
+        <input type="search" id="searchInput" placeholder="جستجو در یادداشت‌ها... (Ctrl+F)" aria-label="جستجو در یادداشت‌ها" autocomplete="off" />
+        <button type="button" class="icon-btn sm" id="searchClear" aria-label="پاک کردن جستجو" hidden><span class="material-symbols-rounded">close</span></button>
+      </div>
+
+      <div class="toolbar">
+        <!-- انتخاب فونت (Dropdown سفارشی) -->
+        <div class="dropdown" id="fontDropdown">
+          <button type="button" class="btn ghost" id="fontBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="فونت دلخواه">
+            <span class="material-symbols-rounded">text_fields</span>
+            <span class="btn-label">فونت دلخواه</span>
+            <span class="material-symbols-rounded caret">expand_more</span>
+          </button>
+          <ul class="dropdown-menu glass" id="fontMenu" role="listbox" hidden>
+            <li role="option" tabindex="0" data-font="Doran"><span class="f-name" style="font-family:'Doran'">دوران</span><span class="f-sample" style="font-family:'Doran'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+            <li role="option" tabindex="0" data-font="Hakaza"><span class="f-name" style="font-family:'Hakaza'">هکزا</span><span class="f-sample" style="font-family:'Hakaza'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+            <li role="option" tabindex="0" data-font="Irancell"><span class="f-name" style="font-family:'Irancell'">ایرانسل</span><span class="f-sample" style="font-family:'Irancell'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+            <li role="option" tabindex="0" data-font="Hasti"><span class="f-name" style="font-family:'Hasti'">هستی</span><span class="f-sample" style="font-family:'Hasti'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+            <li role="option" tabindex="0" data-font="Farhang"><span class="f-name" style="font-family:'Farhang'">فرهنگ</span><span class="f-sample" style="font-family:'Farhang'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+          </ul>
+        </div>
+
+        <!-- تغییر پالت رنگی -->
+        <div class="dropdown" id="paletteDropdown">
+          <button type="button" class="icon-btn" id="paletteBtn" aria-haspopup="true" aria-expanded="false" aria-label="تم رنگی" title="تم رنگی"><span class="material-symbols-rounded">palette</span></button>
+          <ul class="dropdown-menu glass" id="paletteMenu" hidden>
+            <li tabindex="0" data-palette="aurora"><i class="sw sw-aurora"></i>Aurora</li>
+            <li tabindex="0" data-palette="sunset"><i class="sw sw-sunset"></i>Sunset</li>
+            <li tabindex="0" data-palette="ocean"><i class="sw sw-ocean"></i>Ocean</li>
+            <li tabindex="0" data-palette="neon"><i class="sw sw-neon"></i>Neon</li>
+            <li tabindex="0" data-palette="mono"><i class="sw sw-mono"></i>Mono</li>
+          </ul>
+        </div>
+
+        <button type="button" class="icon-btn" id="layoutBtn" aria-label="تغییر چیدمان" title="چیدمان"><span class="material-symbols-rounded">view_list</span></button>
+        <button type="button" class="icon-btn" id="themeBtn" aria-label="تغییر تم روشن و تاریک" title="تم"><span class="material-symbols-rounded">light_mode</span></button>
+        <button type="button" class="icon-btn" id="cmdBtn" aria-label="پالت دستورات (Ctrl+K)" title="Ctrl+K"><span class="material-symbols-rounded">keyboard_command_key</span></button>
+        <button type="button" class="icon-btn" id="dashBtn" aria-label="داشبورد" title="داشبورد"><span class="material-symbols-rounded">bar_chart</span></button>
+        <button type="button" class="icon-btn" id="trashBtn" aria-label="سطل زباله" title="سطل زباله"><span class="material-symbols-rounded">delete</span><b class="badge" id="trashBadge" hidden>0</b></button>
+        <button type="button" class="icon-btn" id="settingsBtn" aria-label="تنظیمات" title="تنظیمات"><span class="material-symbols-rounded">settings</span></button>
+      </div>
+    </header>
+
+    <div class="layout">
+
+      <!-- ── سایدبار: پوشه‌ها و ابر برچسب ── -->
+      <aside class="sidebar glass" aria-label="پوشه‌ها و برچسب‌ها">
+        <div class="side-head">
+          <h2><span class="material-symbols-rounded">folder</span>پوشه‌ها</h2>
+          <button type="button" class="icon-btn sm" id="addFolderBtn" aria-label="پوشه جدید"><span class="material-symbols-rounded">add</span></button>
+        </div>
+        <ul class="folder-list" id="folderList"></ul>
+
+        <div class="side-head">
+          <h2><span class="material-symbols-rounded">label</span>ابر برچسب‌ها</h2>
+        </div>
+        <div class="tag-cloud" id="tagCloud"></div>
+      </aside>
+
+      <!-- ── محتوای اصلی ── -->
+      <main class="main" id="main">
+
+        <!-- نوار آمار -->
+        <section class="stats" aria-label="آمار">
+          <div class="stat glass"><span class="material-symbols-rounded">description</span><div><b id="statTotal">0</b><small>کل یادداشت‌ها</small></div></div>
+          <div class="stat glass"><span class="material-symbols-rounded">push_pin</span><div><b id="statPinned">0</b><small>پین‌شده</small></div></div>
+          <div class="stat glass"><span class="material-symbols-rounded">edit_note</span><div><b id="statWords">0</b><small>کل کلمات</small></div></div>
+        </section>
+
+        <!-- فیلترهای سریع و مرتب‌سازی -->
+        <section class="filters" aria-label="فیلترها">
+          <div class="chips" id="quickFilters" role="tablist">
+            <button type="button" class="chip active" data-filter="all" role="tab">همه</button>
+            <button type="button" class="chip" data-filter="pinned" role="tab"><span class="material-symbols-rounded">push_pin</span>پین</button>
+            <button type="button" class="chip" data-filter="today" role="tab">امروز</button>
+            <button type="button" class="chip" data-filter="week" role="tab">هفته</button>
+            <button type="button" class="chip" data-filter="checklist" role="tab"><span class="material-symbols-rounded">check_box</span>چک‌لیست</button>
+          </div>
+          <label class="sort">
+            <span class="material-symbols-rounded">sort</span>
+            <select id="sortSelect" aria-label="مرتب‌سازی">
+              <option value="newest">جدیدترین</option>
+              <option value="oldest">قدیمی‌ترین</option>
+              <option value="alpha">الفبا</option>
+              <option value="length">طول</option>
+            </select>
+          </label>
+        </section>
+
+        <!-- یادداشت‌های همین روز در سال‌های قبل -->
+        <section class="on-this-day glass" id="onThisDay" hidden aria-label="در همین روز">
+          <h3><span class="material-symbols-rounded">history</span>در همین روز</h3>
+          <div class="otd-list" id="otdList"></div>
+        </section>
+
+        <!-- لیست یادداشت‌ها -->
+        <section class="notes grid" id="notesContainer" aria-live="polite" aria-label="لیست یادداشت‌ها"></section>
+
+        <!-- حالت خالی -->
+        <div class="empty" id="emptyState" hidden>
+          <span class="material-symbols-rounded">edit_note</span>
+          <p>هنوز هیچ یادداشتی نداری. اولین جرقه ذهنت رو ثبت کن</p>
+          <button type="button" class="btn primary" data-action="new"><span class="material-symbols-rounded">add</span>یادداشت جدید</button>
+        </div>
+      </main>
+    </div>
+
+    <!-- دکمه شناور افزودن -->
+    <div class="fab-wrap">
+      <button type="button" class="fab magnetic" id="fab" aria-label="یادداشت جدید" title="یادداشت جدید (Ctrl+N)">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+      <button type="button" class="fab mini magnetic" id="templatesBtn" aria-label="قالب‌های آماده" title="قالب‌های آماده">
+        <span class="material-symbols-rounded">auto_awesome</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═════════ مودال ویرایشگر ═════════ -->
+  <div class="overlay" id="editorOverlay" hidden>
+    <div class="modal glass editor" id="editorModal" role="dialog" aria-modal="true" aria-labelledby="editorTitleLabel">
+      <div class="modal-head">
+        <span id="editorTitleLabel" class="modal-title">یادداشت جدید</span>
+        <div class="modal-actions">
+          <button type="button" class="icon-btn" id="edPin" aria-label="پین" title="پین"><span class="material-symbols-rounded">push_pin</span></button>
+          <button type="button" class="icon-btn" id="edPrivate" aria-label="یادداشت خصوصی" title="خصوصی"><span class="material-symbols-rounded">lock_open</span></button>
+          <button type="button" class="icon-btn" id="edVoice" aria-label="ورودی صوتی" title="تایپ با صدا"><span class="material-symbols-rounded">mic</span></button>
+          <button type="button" class="icon-btn" id="edSpeak" aria-label="خواندن با صدا" title="خواندن با صدا"><span class="material-symbols-rounded">volume_up</span></button>
+          <button type="button" class="icon-btn" id="edCopy" aria-label="کپی" title="کپی"><span class="material-symbols-rounded">content_copy</span></button>
+          <button type="button" class="icon-btn" id="edZen" aria-label="حالت تمرکز" title="حالت تمرکز"><span class="material-symbols-rounded">center_focus_strong</span></button>
+          <button type="button" class="icon-btn" id="edClose" aria-label="بستن"><span class="material-symbols-rounded">close</span></button>
+        </div>
+      </div>
+
+      <input type="text" id="edTitle" class="ed-title" placeholder="عنوان یادداشت..." aria-label="عنوان یادداشت" autocomplete="off" />
+
+      <!-- نوار ابزار مارک‌داون -->
+      <div class="md-bar" id="mdBar" role="toolbar" aria-label="قالب‌بندی">
+        <button type="button" data-md="h" aria-label="عنوان"><span class="material-symbols-rounded">title</span></button>
+        <button type="button" data-md="b" aria-label="پررنگ"><span class="material-symbols-rounded">format_bold</span></button>
+        <button type="button" data-md="s" aria-label="خط‌خورده"><span class="material-symbols-rounded">format_strikethrough</span></button>
+        <button type="button" data-md="hl" aria-label="هایلایت"><span class="material-symbols-rounded">ink_highlighter</span></button>
+        <button type="button" data-md="ul" aria-label="لیست"><span class="material-symbols-rounded">format_list_bulleted</span></button>
+        <button type="button" data-md="cb" aria-label="چک‌باکس"><span class="material-symbols-rounded">check_box_outline_blank</span></button>
+        <button type="button" data-md="tag" aria-label="هشتگ"><span class="material-symbols-rounded">tag</span></button>
+        <span class="md-sep"></span>
+        <button type="button" data-md="preview" id="mdPreviewBtn" aria-label="پیش‌نمایش" aria-pressed="false"><span class="material-symbols-rounded">visibility</span></button>
+      </div>
+
+      <div class="ed-body-wrap">
+        <textarea id="edBody" class="ed-body" placeholder="امروز چه چیزی ذهنت رو مشغول کرده؟" aria-label="متن یادداشت"></textarea>
+        <div class="md-preview" id="mdPreview" hidden></div>
+      </div>
+
+      <div class="ed-meta">
+        <div class="color-picker" id="colorPicker" role="radiogroup" aria-label="برچسب رنگی">
+          <button type="button" class="dot c-default active" data-color="default" role="radio" aria-label="پیش‌فرض"></button>
+          <button type="button" class="dot c-purple" data-color="purple" role="radio" aria-label="بنفش"></button>
+          <button type="button" class="dot c-cyan" data-color="cyan" role="radio" aria-label="فیروزه‌ای"></button>
+          <button type="button" class="dot c-pink" data-color="pink" role="radio" aria-label="صورتی"></button>
+          <button type="button" class="dot c-gold" data-color="gold" role="radio" aria-label="طلایی"></button>
+          <button type="button" class="dot c-green" data-color="green" role="radio" aria-label="سبز"></button>
+        </div>
+        <label class="folder-pick">
+          <span class="material-symbols-rounded">folder</span>
+          <select id="edFolder" aria-label="پوشه"></select>
+        </label>
+        <span class="counter" id="edCounter">۰ کاراکتر · ۰ کلمه</span>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn danger" id="edDelete"><span class="material-symbols-rounded">delete</span>حذف</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="edCancel">لغو</button>
+        <button type="button" class="btn primary" id="edSave"><span class="material-symbols-rounded">check</span>ذخیره</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ پالت دستورات ═════════ -->
+  <div class="overlay top" id="cmdOverlay" hidden>
+    <div class="modal glass cmd" role="dialog" aria-modal="true" aria-label="پالت دستورات">
+      <div class="cmd-input">
+        <span class="material-symbols-rounded">keyboard_command_key</span>
+        <input type="text" id="cmdInput" placeholder="چی می‌خوای انجام بدی؟" aria-label="جستجوی دستورات" autocomplete="off" />
+        <kbd>Esc</kbd>
+      </div>
+      <ul class="cmd-list" id="cmdList" role="listbox"></ul>
+    </div>
+  </div>
+
+  <!-- ═════════ قالب‌های آماده ═════════ -->
+  <div class="overlay" id="tplOverlay" hidden>
+    <div class="modal glass sm" role="dialog" aria-modal="true" aria-label="قالب‌های آماده">
+      <div class="modal-head"><span class="modal-title"><span class="material-symbols-rounded">auto_awesome</span>قالب‌های آماده</span>
+        <button type="button" class="icon-btn" data-close="tplOverlay" aria-label="بستن"><span class="material-symbols-rounded">close</span></button></div>
+      <div class="tpl-grid" id="tplGrid"></div>
+    </div>
+  </div>
+
+  <!-- ═════════ سطل زباله ═════════ -->
+  <div class="overlay" id="trashOverlay" hidden>
+    <div class="modal glass sm" role="dialog" aria-modal="true" aria-label="سطل زباله">
+      <div class="modal-head"><span class="modal-title"><span class="material-symbols-rounded">delete</span>سطل زباله</span>
+        <button type="button" class="icon-btn" data-close="trashOverlay" aria-label="بستن"><span class="material-symbols-rounded">close</span></button></div>
+      <p class="muted small">یادداشت‌های حذف‌شده ۳۰ روز نگه داشته می‌شوند.</p>
+      <ul class="trash-list" id="trashList"></ul>
+      <div class="modal-foot">
+        <button type="button" class="btn danger" id="trashEmpty"><span class="material-symbols-rounded">delete_forever</span>خالی کردن سطل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ داشبورد ═════════ -->
+  <div class="overlay" id="dashOverlay" hidden>
+    <div class="modal glass sm" role="dialog" aria-modal="true" aria-label="داشبورد">
+      <div class="modal-head"><span class="modal-title"><span class="material-symbols-rounded">bar_chart</span>داشبورد</span>
+        <button type="button" class="icon-btn" data-close="dashOverlay" aria-label="بستن"><span class="material-symbols-rounded">close</span></button></div>
+      <div class="dash-body" id="dashBody"></div>
+    </div>
+  </div>
+
+  <!-- ═════════ تنظیمات ═════════ -->
+  <div class="overlay" id="settingsOverlay" hidden>
+    <div class="modal glass sm" role="dialog" aria-modal="true" aria-label="تنظیمات">
+      <div class="modal-head"><span class="modal-title"><span class="material-symbols-rounded">settings</span>تنظیمات</span>
+        <button type="button" class="icon-btn" data-close="settingsOverlay" aria-label="بستن"><span class="material-symbols-rounded">close</span></button></div>
+
+      <div class="set-group">
+        <h3><span class="material-symbols-rounded">lock</span>قفل PIN</h3>
+        <div class="set-row">
+          <input type="password" id="pinInput" inputmode="numeric" maxlength="4" pattern="[0-9]*" placeholder="رمز ۴ رقمی" aria-label="رمز ۴ رقمی" autocomplete="off" />
+          <button type="button" class="btn primary" id="pinSave">فعال‌سازی</button>
+          <button type="button" class="btn ghost" id="pinRemove">حذف قفل</button>
+        </div>
+        <label class="switch-row"><input type="checkbox" id="showPrivate" /><span>نمایش یادداشت‌های خصوصی</span></label>
+      </div>
+
+      <div class="set-group">
+        <h3><span class="material-symbols-rounded">dark_mode</span>حالت‌ها</h3>
+        <div class="set-row"><select id="themeSelect" aria-label="تم"><option value="auto">خودکار (مطابق سیستم)</option><option value="light">روشن</option><option value="dark">تاریک</option></select></div>
+        <label class="switch-row"><input type="checkbox" id="midnightToggle" /><span>حالت نیمه‌شب (خودکار بعد از ساعت ۱۲ شب)</span></label>
+        <label class="switch-row"><input type="checkbox" id="hapticToggle" /><span>لرزش لمسی در موبایل</span></label>
+      </div>
+
+      <div class="set-group">
+        <h3><span class="material-symbols-rounded">download</span>پشتیبان‌گیری</h3>
+        <div class="set-row wrap">
+          <button type="button" class="btn ghost" id="exportJson"><span class="material-symbols-rounded">download</span>JSON</button>
+          <button type="button" class="btn ghost" id="exportMd"><span class="material-symbols-rounded">download</span>Markdown</button>
+          <button type="button" class="btn ghost" id="exportTxt"><span class="material-symbols-rounded">download</span>TXT</button>
+          <button type="button" class="btn ghost" id="importBtn"><span class="material-symbols-rounded">upload</span>ورود JSON</button>
+          <button type="button" class="btn ghost" id="printBtn"><span class="material-symbols-rounded">print</span>پرینت / PDF</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ تأیید حذف ═════════ -->
+  <div class="overlay" id="confirmOverlay" hidden>
+    <div class="modal glass confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirmText">
+      <span class="material-symbols-rounded confirm-icon">delete</span>
+      <p id="confirmText">این یادداشت حذف شود؟</p>
+      <div class="modal-foot center">
+        <button type="button" class="btn ghost" id="confirmNo">لغو</button>
+        <button type="button" class="btn danger" id="confirmYes">حذف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ حالت تمرکز ═════════ -->
+  <button type="button" class="zen-exit" id="zenExit" hidden aria-label="خروج از حالت تمرکز"><span class="material-symbols-rounded">close_fullscreen</span></button>
+
+  <!-- ═════════ Toast ═════════ -->
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <!-- جاوااسکریپت -->
+  <script src="./script.js" defer></script>
+</body>
+</html>
