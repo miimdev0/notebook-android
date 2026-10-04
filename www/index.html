@@ -88,7 +88,7 @@
           </button>
           <ul class="dropdown-menu glass" id="fontMenu" role="listbox" hidden>
             <li role="option" tabindex="0" data-font="Doran"><span class="f-name" style="font-family:'Doran'">دوران</span><span class="f-sample" style="font-family:'Doran'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
-            <li role="option" tabindex="0" data-font="Hakaza"><span class="f-name" style="font-family:'Hakaza'">هکزا</span><span class="f-sample" style="font-family:'Hakaza'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
+            <li role="option" tabindex="0" data-font="Hakaza"><span class="f-name" style="font-family:'Hakaza'">هاکذا</span><span class="f-sample" style="font-family:'Hakaza'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
             <li role="option" tabindex="0" data-font="Irancell"><span class="f-name" style="font-family:'Irancell'">ایرانسل</span><span class="f-sample" style="font-family:'Irancell'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
             <li role="option" tabindex="0" data-font="Hasti"><span class="f-name" style="font-family:'Hasti'">هستی</span><span class="f-sample" style="font-family:'Hasti'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
             <li role="option" tabindex="0" data-font="Farhang"><span class="f-name" style="font-family:'Farhang'">فرهنگ</span><span class="f-sample" style="font-family:'Farhang'">جرقه‌های ذهن</span><span class="material-symbols-rounded check">check</span></li>
@@ -177,6 +177,7 @@
           <p>هنوز هیچ یادداشتی نداری. اولین جرقه ذهنت رو ثبت کن</p>
           <button type="button" class="btn primary" data-action="new"><span class="material-symbols-rounded">add</span>یادداشت جدید</button>
         </div>
+      <footer class="site-foot">ساخته‌شده با دقت توسط <b id="creatorName"></b> · <button type="button" class="link-btn" id="aboutBtn">درباره من</button></footer>
       </main>
     </div>
 
@@ -328,6 +329,20 @@
           <button type="button" class="btn ghost" id="printBtn"><span class="material-symbols-rounded">print</span>پرینت / PDF</button>
         </div>
         <input type="file" id="importFile" accept="application/json,.json" hidden />
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ درباره من ═════════ -->
+  <div class="overlay" id="aboutOverlay" hidden>
+    <div class="modal glass sm" role="dialog" aria-modal="true" aria-label="درباره من">
+      <div class="modal-head"><span class="modal-title"><span class="material-symbols-rounded">person</span>درباره من</span>
+        <button type="button" class="icon-btn" data-close="aboutOverlay" aria-label="بستن"><span class="material-symbols-rounded">close</span></button></div>
+      <div class="about-card">
+        <div class="avatar"><span class="material-symbols-rounded">person</span></div>
+        <h2 id="aboutName"></h2>
+        <p class="muted" id="aboutRole"></p>
+        <p id="aboutBio"></p>
       </div>
     </div>
   </div>
