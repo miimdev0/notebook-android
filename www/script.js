@@ -5,6 +5,13 @@
 (() => {
 'use strict';
 
+/* ───────── اطلاعات سازنده (این بخش را ویرایش کن) ───────── */
+const CREATOR = {
+  name: 'مجتبی میدانی',
+  role: 'سازنده‌ی دفترچه من',
+  bio: 'سلام! این دفترچه را ساختم تا جرقه‌های ذهنم را جایی امن و زیبا ثبت کنم. اگر پیشنهاد یا نظری داری، خوشحال می‌شوم بشنوم.'
+};
+
 /* ───────── ابزارهای کمکی ───────── */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -31,7 +38,7 @@ let folders = store.get('folders', []);                       // [{id,name}]
 const savedCfg = store.get('cfg', {});
 let cfg = Object.assign({ font: 'Doran', theme: 'dark', themeMode: 'auto', palette: 'aurora', layout: 'grid', pin: '', midnight: true, haptic: true, showPrivate: false }, savedCfg);
 if (savedCfg.theme && !savedCfg.themeMode) cfg.themeMode = savedCfg.theme;   // مهاجرت از نسخه قبلی
-let freshId = '';
+let freshId = '', dirty = false;
 const ui = { filter: 'all', sort: 'newest', q: '', tag: '', folder: '', editing: null, draft: null, color: 'default', pinned: false, priv: false, preview: false };
 const save = () => { store.set('notes', notes); store.set('trash', trash); store.set('folders', folders); store.set('cfg', cfg); };
 const vibrate = ms => { if (cfg.haptic && navigator.vibrate) navigator.vibrate(ms); };
@@ -122,6 +129,7 @@ function noteCard(n, i) {
   return el;
 }
 function render(anim = false) {
+  dirty = false;
   const box = $('#notesContainer'), list = visibleNotes();
   box.className = 'notes ' + cfg.layout;
   box.innerHTML = '';
@@ -162,7 +170,7 @@ function renderOTD(shown) {
 /* ───────── ویرایشگر ───────── */
 const ov = id => $('#' + id);
 function openOverlay(id) { ov(id).hidden = false; }
-function closeOverlay(id) { ov(id).hidden = true; if (id === 'editorOverlay') { document.body.classList.remove('zen'); $('#zenExit').hidden = true; stopVoice(); window.speechSynthesis && speechSynthesis.cancel(); } }
+function closeOverlay(id) { ov(id).hidden = true; if (id === 'editorOverlay') { if (dirty) render(); document.body.classList.remove('zen'); $('#zenExit').hidden = true; stopVoice(); window.speechSynthesis && speechSynthesis.cancel(); } }
 function fillFolderSelect() {
   $('#edFolder').innerHTML = '<option value="">بدون پوشه</option>' + folders.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('');
 }
@@ -201,7 +209,7 @@ function saveEditor(close = true) {
   const now = Date.now();
   if (ui.editing) Object.assign(notes.find(x => x.id === ui.editing), d, { updated: now });
   else { const n = { id: uid(), created: now, updated: now, ...d }; notes.unshift(n); ui.editing = n.id; freshId = n.id; if (close) confetti(); }
-  save(); render(); freshId = ''; vibrate(15);
+  save(); if (close) render(); else dirty = true; freshId = ''; if (close) vibrate(15);
   if (close) { closeOverlay('editorOverlay'); toast(d.private && !cfg.showPrivate ? 'ذخیره شد (یادداشت خصوصی مخفی است)' : 'ذخیره شد'); }
 }
 const autosave = debounce(() => { if (ui.editing && !$('#editorOverlay').hidden) saveEditor(false); }, 800);   // ذخیره خودکار
@@ -363,6 +371,7 @@ const COMMANDS = () => [
   { t: 'سطل زباله', i: 'delete', run: () => { renderTrash(); openOverlay('trashOverlay'); } },
   { t: 'داشبورد', i: 'bar_chart', run: () => { renderDash(); openOverlay('dashOverlay'); } },
   { t: 'تنظیمات', i: 'settings', run: openSettings },
+  { t: 'درباره من', i: 'person', run: () => openOverlay('aboutOverlay') },
   { t: 'خروجی JSON', i: 'download', run: () => $('#exportJson').click() },
   ...['aurora', 'sunset', 'ocean', 'neon', 'mono'].map(p => ({ t: 'تم رنگی: ' + p, i: 'palette', run: () => applyPalette(p) })),
   ...['Doran', 'Hakaza', 'Irancell', 'Hasti', 'Farhang'].map(f => ({ t: 'فونت: ' + f, i: 'text_fields', run: () => applyFont(f) })),
@@ -394,10 +403,14 @@ function openSettings() {
 
 /* ───────── انیمیشن‌ها ───────── */
 // هاله‌ی دنبال‌کننده موس با rAF
-const glow = $('#cursorGlow'); let mx = 0, my = 0, gx = 0, gy = 0;
+const glow = $('#cursorGlow'); let mx = 0, my = 0, gx = 0, gy = 0, glowRun = false;
+function glowLoop() {                                   // فقط وقتی موس حرکت می‌کند اجرا می‌شود
+  gx += (mx - gx) * .15; gy += (my - gy) * .15;
+  glow.style.transform = `translate3d(${gx}px,${gy}px,0)`;
+  if (Math.abs(mx - gx) > .5 || Math.abs(my - gy) > .5) requestAnimationFrame(glowLoop); else glowRun = false;
+}
 if (matchMedia('(hover:hover)').matches) {
-  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; glow.classList.add('on'); });
-  (function loop() { gx += (mx - gx) * .12; gy += (my - gy) * .12; glow.style.transform = `translate(${gx}px,${gy}px)`; requestAnimationFrame(loop); })();
+  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; glow.classList.add('on'); if (!glowRun) { glowRun = true; requestAnimationFrame(glowLoop); } }, { passive: true });
 }
 // موج روی دکمه‌ها
 document.addEventListener('pointerdown', e => {
@@ -458,7 +471,7 @@ function bind() {
   document.addEventListener('click', e => { if (e.target.closest('[data-action="new"]')) openEditor(); const c = e.target.closest('[data-close]'); if (c) closeOverlay(c.dataset.close); });
 
   /* جستجو با debounce ۲۰۰ms */
-  const doSearch = debounce(() => { ui.q = $('#searchInput').value.trim(); render(true); }, 200);
+  const doSearch = debounce(() => { ui.q = $('#searchInput').value.trim(); render(); }, 200);
   $('#searchInput').oninput = () => { $('#searchClear').hidden = !$('#searchInput').value; doSearch(); };
   $('#searchClear').onclick = () => { $('#searchInput').value = ''; ui.q = ''; $('#searchClear').hidden = true; render(true); };
   $('#quickFilters').onclick = e => { const c = e.target.closest('.chip'); if (!c) return; ui.filter = c.dataset.filter; $$('.chip').forEach(x => x.classList.toggle('active', x === c)); render(true); };
@@ -549,6 +562,10 @@ function init() {
   purgeTrash();
   applyFont(cfg.font); applyTheme(null, false); applyPalette(cfg.palette); checkMidnight();
   setInterval(checkMidnight, 60000);
+  $('#creatorName').textContent = $('#aboutName').textContent = CREATOR.name;
+  $('#aboutRole').textContent = CREATOR.role; $('#aboutBio').textContent = CREATOR.bio;
+  $('#aboutBtn').onclick = () => openOverlay('aboutOverlay');
+  $('#aboutOverlay').addEventListener('mousedown', e => { if (e.target.id === 'aboutOverlay') closeOverlay('aboutOverlay'); });
   bind(); render(true);
   if (cfg.pin) showLock();
   setTimeout(() => { const s = $('#skeleton'); s.classList.add('done'); setTimeout(() => s.remove(), 500); }, 450);
