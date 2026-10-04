@@ -32,7 +32,7 @@
 }
 [data-theme="light"] .orb{opacity:.28}
 [data-theme="light"] .bg-mesh{opacity:.6}
-[data-theme="light"] .bg-noise{mix-blend-mode:multiply;opacity:.05}
+[data-theme="light"] .bg-noise{opacity:.03}
 [data-theme="light"] .bg-grid{opacity:.7}
 [data-theme="light"] .brand-logo{filter:none}
 /* پالت‌های رنگی */
@@ -51,7 +51,7 @@ html{scroll-behavior:smooth}
 body{
   font-family:var(--font-active),Tahoma,sans-serif;background:var(--bg);color:var(--text);
   min-height:100vh;overflow-x:hidden;line-height:1.8;
-  transition:background .5s,color .4s,font-family .3s;
+  transition:background .5s,color .4s;
 }
 button,input,select,textarea{font:inherit;color:inherit;background:none;border:none;outline:none}
 button{cursor:pointer}
@@ -70,7 +70,7 @@ kbd{padding:2px 8px;border:1px solid var(--border);border-radius:8px;font-size:.
 /* ── پس‌زمینه ── */
 .bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--bg)}
 .bg-mesh{
-  position:absolute;inset:-30%;
+  position:absolute;inset:-12%;will-change:transform;
   background:
     radial-gradient(40% 40% at 20% 25%,color-mix(in srgb,var(--a1) 40%,transparent),transparent 70%),
     radial-gradient(35% 35% at 80% 20%,color-mix(in srgb,var(--a2) 32%,transparent),transparent 70%),
@@ -78,10 +78,10 @@ kbd{padding:2px 8px;border:1px solid var(--border);border-radius:8px;font-size:.
   animation:mesh 24s ease-in-out infinite alternate;
 }
 @keyframes mesh{0%{transform:translate(0,0) rotate(0) scale(1)}50%{transform:translate(4%,-3%) rotate(8deg) scale(1.15)}100%{transform:translate(-4%,4%) rotate(-6deg) scale(1.05)}}
-.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:float 18s ease-in-out infinite}
-.orb-1{width:340px;height:340px;background:var(--a1);top:8%;right:10%}
-.orb-2{width:280px;height:280px;background:var(--a2);bottom:10%;left:8%;animation-delay:-6s;animation-duration:22s}
-.orb-3{width:220px;height:220px;background:var(--a3);top:50%;left:45%;animation-delay:-12s;animation-duration:26s}
+.orb{position:absolute;border-radius:50%;opacity:.5;will-change:transform;animation:float 18s ease-in-out infinite}
+.orb-1{width:460px;height:460px;background:radial-gradient(circle,var(--a1),transparent 68%);top:8%;right:10%}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,var(--a2),transparent 68%);bottom:10%;left:8%;animation-delay:-6s;animation-duration:22s}
+.orb-3{width:340px;height:340px;background:radial-gradient(circle,var(--a3),transparent 68%);top:50%;left:45%;animation-delay:-12s;animation-duration:26s}
 @keyframes float{0%,100%{transform:translate(0,0)}33%{transform:translate(40px,-50px)}66%{transform:translate(-50px,30px)}}
 .bg-grid{
   position:absolute;inset:0;
@@ -91,7 +91,7 @@ kbd{padding:2px 8px;border:1px solid var(--border);border-radius:8px;font-size:.
   mask-image:radial-gradient(circle at 50% 30%,#000 0,transparent 70%);
 }
 .bg-noise{
-  position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;
+  position:absolute;inset:0;opacity:.04;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .cursor-glow{
@@ -106,7 +106,7 @@ kbd{padding:2px 8px;border:1px solid var(--border);border-radius:8px;font-size:.
 /* ── شیشه ── */
 .glass{
   background:var(--glass);border:1px solid var(--border);box-shadow:var(--shadow);
-  -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
 }
 
 /* ── اسکلت بارگذاری ── */
@@ -225,7 +225,6 @@ kbd{padding:2px 8px;border:1px solid var(--border);border-radius:8px;font-size:.
 .note{
   --c:transparent;position:relative;padding:18px 22px 14px 18px;border-radius:var(--radius);cursor:pointer;overflow:hidden;
   background:var(--glass);border:1px solid var(--border);box-shadow:var(--shadow);
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   animation:cardIn .6s var(--ease) backwards;animation-delay:calc(var(--i,0)*60ms);
   transition:transform .35s var(--ease),box-shadow .35s,border-color .35s;
 }
@@ -267,13 +266,13 @@ mark,.hl{background:linear-gradient(transparent 10%,rgba(251,191,36,.55) 10%);co
 .fab-wrap{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:24px;z-index:80;display:flex;flex-direction:column;align-items:center;gap:12px}
 .fab{
   position:relative;overflow:hidden;width:64px;height:64px;border-radius:22px;display:grid;place-items:center;color:#fff;
-  background:linear-gradient(135deg,var(--a1),var(--a2));animation:glowPulse 2.8s ease-in-out infinite;
+  background:linear-gradient(135deg,var(--a1),var(--a2));animation:fabPulse 3s ease-in-out infinite;box-shadow:0 0 28px color-mix(in srgb,var(--a1) 55%,transparent);
   transition:transform .3s var(--ease);
 }
 .fab .material-symbols-rounded{font-size:32px;transition:transform .4s var(--ease)}
 .fab:hover .material-symbols-rounded{transform:rotate(90deg)}
-.fab.mini{width:48px;height:48px;border-radius:16px;background:var(--glass-2);border:1px solid var(--border);animation:none}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 20px color-mix(in srgb,var(--a1) 55%,transparent),0 0 0 0 color-mix(in srgb,var(--a1) 40%,transparent)}50%{box-shadow:0 0 40px color-mix(in srgb,var(--a2) 70%,transparent),0 0 0 14px transparent}}
+.fab.mini{width:48px;height:48px;border-radius:16px;background:var(--glass-2);border:1px solid var(--border);animation:none;box-shadow:none}
+@keyframes fabPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 
 /* ── مودال‌ها ── */
 .overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;background:var(--overlay);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fade .25s}
@@ -404,3 +403,28 @@ body.zen .ed-body{min-height:60vh;max-height:70vh;font-size:1.15rem}
 @media (hover:none){.folder-list li .f-del{opacity:1}}
 .set-row select{flex:1;padding:10px 14px;border-radius:12px;background:var(--glass);border:1px solid var(--border)}
 html.theming *,html.theming *::before,html.theming *::after{transition:background-color .45s,color .45s,border-color .45s,box-shadow .45s!important}
+
+/* کارت‌ها بدون blur (سبک‌تر) */
+.note{background:color-mix(in srgb,var(--panel-solid) 72%,transparent)}
+
+/* موبایل و صفحه لمسی: افکت‌های سنگین خاموش */
+@media (max-width:760px),(hover:none){
+  .glass,.toast{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .glass{background:color-mix(in srgb,var(--panel-solid) 80%,transparent)}
+  .overlay{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .bg-grid,.bg-noise,.cursor-glow{display:none}
+  .bg-mesh,.orb{animation:none}
+  .orb{opacity:.35}
+  .note:hover{transform:none}
+}
+
+/* درباره من */
+.site-foot{margin-top:40px;text-align:center;color:var(--muted);font-size:.9rem}
+.site-foot b{color:var(--text)}
+.link-btn{color:var(--tag-text);text-decoration:underline;text-underline-offset:4px}
+.about-card{text-align:center;padding:10px 6px 4px}
+.avatar{width:84px;height:84px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 30px color-mix(in srgb,var(--a1) 50%,transparent)}
+.avatar .material-symbols-rounded{font-size:44px}
+.about-card h2{font-size:1.3rem}
+.about-card p{margin-top:8px}
+@media print{.site-foot{display:none}}
