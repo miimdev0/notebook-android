@@ -1,0 +1,32 @@
+# نشر سایت پورتفولیو روی GitHub Pages (پوشه portfolio/)
+name: Deploy Portfolio
+
+on:
+  push:
+    branches: [arena/17e9e5fd-notebook-android]
+    paths: ['portfolio/**', '.github/workflows/deploy-portfolio.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-portfolio
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: portfolio
+      - id: deployment
+        uses: actions/deploy-pages@v4
